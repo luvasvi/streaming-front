@@ -1,0 +1,224 @@
+<div class="container">
+  
+  <div class="nav-header">
+    <div class="nav-buttons">
+      <button class="btn-nav" (click)="irParaHome()" title="Início">🏠</button>
+      <button class="btn-nav" *ngIf="filmeSelecionado || emListagem" (click)="voltar()" title="Voltar">
+        ↩️
+      </button>
+    </div>
+    <h1 (click)="irParaHome()" style="cursor:pointer">FTTB</h1>
+  </div>
+
+  <div class="search-box" *ngIf="!filmeSelecionado">
+    <input #movieInput type="text" placeholder="Filmes, séries ou artistas..." (keyup.enter)="buscarFilme(movieInput.value)">
+    <button (click)="buscarFilme(movieInput.value)">Buscar</button>
+  </div>
+
+  <div class="genre-container" *ngIf="!filmeSelecionado && !carregando && !artistaNome">
+    <div class="genre-list">
+      <button *ngFor="let g of generos" 
+              [class.active]="generoAtivo === g.nome"
+              (click)="buscarPorGenero(g.id, g.nome)">
+        {{ g.nome }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="carregando" class="home-showcase">
+    <section class="shelf" *ngFor="let shelf of [1,2]">
+      <div class="skeleton" style="width: 200px; height: 25px; margin-bottom: 20px; border-radius: 4px;"></div>
+      <div class="horizontal-scroll">
+        <div *ngFor="let card of [1,2,3,4,5,6]" class="skeleton skeleton-card"></div>
+      </div>
+    </section>
+
+    <section class="shelf">
+      <div class="skeleton" style="width: 250px; height: 25px; margin-bottom: 20px; border-radius: 4px;"></div>
+      <div class="horizontal-scroll">
+        <div *ngFor="let actor of [1,2,3,4,5,6]" style="text-align: center; min-width: 130px;">
+          <div class="skeleton skeleton-circle"></div>
+          <div class="skeleton skeleton-text"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <h2 *ngIf="generoAtivo && filmes.length > 0 && !filmeSelecionado && !carregando" class="genre-title">
+    Explorando: <span>{{ generoAtivo }}</span>
+  </h2>
+
+  <div class="home-showcase" *ngIf="filmes.length === 0 && pessoasEncontradas.length === 0 && !filmeSelecionado && !carregando && !artistaNome">
+    
+    <section class="shelf" *ngIf="favoritos.length > 0">
+      <h2>❤️ Minha Lista</h2>
+      <div class="horizontal-scroll">
+        <div *ngFor="let fav of favoritos" class="mini-card" (click)="verDetalhes(fav)">
+          <img *ngIf="fav.poster_path" [src]="'https://image.tmdb.org/t/p/w342' + fav.poster_path" [alt]="fav.title || fav.name">
+          <button class="btn-heart-mini" (click)="toggleFavorito(fav, $event)">
+            {{ isFavorito(fav.id) ? '❤️' : '🤍' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="shelf">
+      <h2>🔥 Em Alta hoje</h2>
+      <div class="horizontal-scroll">
+        <div *ngFor="let t of trending" class="mini-card" (click)="verDetalhes(t)">
+          <img *ngIf="t.poster_path" [src]="'https://image.tmdb.org/t/p/w342' + t.poster_path" [alt]="t.title || t.name">
+          <div class="mini-rating">⭐ {{ t.vote_average | number:'1.1-1' }}</div>
+          <button class="btn-heart-mini" (click)="toggleFavorito(t, $event)">
+            {{ isFavorito(t.id) ? '❤️' : '🤍' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="shelf">
+      <h2>🌟 Estrelas do Momento</h2>
+      <div class="horizontal-scroll actors-circle">
+        <div *ngFor="let p of populares" class="actor-mini-card" (click)="buscarPorPessoa(p.name)">
+          <div class="circle-wrapper">
+            <img [src]="'https://image.tmdb.org/t/p/w185' + p.profile_path" *ngIf="p.profile_path">
+            <div class="no-photo-circle" *ngIf="!p.profile_path">👤</div>
+          </div>
+          <p>{{ p.name }}</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="artist-context-banner" *ngIf="artistaNome && !filmeSelecionado && !carregando">
+    <div class="artist-header-content">
+      <h2>Obras com: <span>{{ artistaNome }}</span></h2>
+    </div>
+  </div>
+
+  <div class="search-results-container" *ngIf="(filmes.length > 0 || pessoasEncontradas.length > 0) && !filmeSelecionado && !carregando">
+    <section class="shelf" *ngIf="pessoasEncontradas.length > 0 && !artistaNome">
+      <h2>👤 Artistas Encontrados</h2>
+      <div class="horizontal-scroll actors-circle">
+        <div *ngFor="let p of pessoasEncontradas" class="actor-mini-card" (click)="buscarPorPessoa(p.name)">
+          <div class="circle-wrapper">
+            <img [src]="'https://image.tmdb.org/t/p/w185' + p.profile_path" *ngIf="p.profile_path">
+            <div class="no-photo-circle" *ngIf="!p.profile_path">👤</div>
+          </div>
+          <p>{{ p.name }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="filmes.length > 0">
+      <h2 *ngIf="!artistaNome && !generoAtivo && pessoasEncontradas.length > 0" style="color: #eee; padding-left: 10px; border-left: 4px solid #00ff88; margin-bottom: 20px;">🎬 Obras Encontradas</h2>
+      <div class="movies-grid">
+        <div *ngFor="let f of filmes" class="movie-card" (click)="verDetalhes(f)">
+          <div class="poster-wrapper">
+            <img *ngIf="f.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + f.poster_path">
+            <div class="no-photo" *ngIf="!f.poster_path" style="height: 100%; display: flex; align-items: center; justify-content: center; background: #222; font-size: 2rem;">🎬</div>
+            <div class="rating-badge">⭐ {{ f.vote_average | number:'1.1-1' }}</div>
+            <button class="btn-heart" (click)="toggleFavorito(f, $event)">
+              {{ isFavorito(f.id) ? '❤️' : '🤍' }}
+            </button>
+          </div>
+          <div class="movie-info">
+            <h3>{{ f.title || f.name }} <span *ngIf="f.anoLancamento" style="color: #00ff88; font-size: 0.8rem; margin-left: 5px;">({{ f.anoLancamento }})</span></h3>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="movie-detail-view" *ngIf="filmeSelecionado && !carregando">
+    <div class="dynamic-blur-bg" *ngIf="filmeSelecionado.poster_path"
+         [style.background-image]="'url(https://image.tmdb.org/t/p/original' + filmeSelecionado.poster_path + ')'">
+    </div>
+    
+    <div class="detail-content">
+      <div class="poster-side">
+        <img *ngIf="filmeSelecionado.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + filmeSelecionado.poster_path" class="detail-poster">
+        <div class="no-photo detail-poster" *ngIf="!filmeSelecionado.poster_path" style="display: flex; align-items: center; justify-content: center; background: #222; font-size: 3rem;">🎬</div>
+        
+        <button *ngIf="filmeSelecionado.trailerKey" class="btn-trailer" (click)="mostrarTrailer = true">
+          ▶ Assistir Trailer
+        </button>
+      </div>
+
+      <div class="detail-info">
+        <h2>
+          {{ filmeSelecionado.title || filmeSelecionado.name }} 
+          <span *ngIf="filmeSelecionado.anoLancamento" style="color: #00ff88; font-weight: 300; font-size: 1.8rem;">({{ filmeSelecionado.anoLancamento }})</span>
+        </h2>
+
+        <p class="tagline" *ngIf="filmeSelecionado.tagline">"{{ filmeSelecionado.tagline }}"</p>
+
+        <div class="meta-info-row">
+          <span class="info-tag" *ngIf="filmeSelecionado.runtime">
+            ⏱️ {{ formatarDuracao(filmeSelecionado.runtime) }}
+          </span>
+          <span class="info-tag" *ngIf="filmeSelecionado.budget > 0">
+            💰 Orçamento: {{ formatarMoeda(filmeSelecionado.budget) }}
+          </span>
+          <span class="info-tag" *ngIf="filmeSelecionado.revenue > 0">
+            📈 Receita: {{ formatarMoeda(filmeSelecionado.revenue) }}
+          </span>
+        </div>
+
+        <p class="overview">{{ filmeSelecionado.overview }}</p>
+        
+        <p><strong>Diretor/Criador:</strong> 
+          <span class="link-clicavel" (click)="buscarPorPessoa(filmeSelecionado.director)">
+            {{ filmeSelecionado.director }}
+          </span>
+        </p>
+
+        <div *ngIf="filmeSelecionado.watch_providers?.flatrate" class="streaming-section">
+          <h3>Disponível em:</h3>
+          <div class="provider-list">
+            <img *ngFor="let p of filmeSelecionado.watch_providers.flatrate" 
+                 [src]="'https://image.tmdb.org/t/p/original' + p.logo_path" class="provider-logo">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cast-section" *ngIf="filmeSelecionado.cast?.length > 0">
+      <h3>Elenco Principal</h3>
+      <div class="cast-list">
+        <div *ngFor="let ator of filmeSelecionado.cast.slice(0, 8)" class="actor-card" (click)="buscarPorPessoa(ator.name)">
+          <div class="actor-img-wrapper">
+            <img [src]="'https://image.tmdb.org/t/p/w185' + ator.profile_path" *ngIf="ator.profile_path">
+            <div class="no-photo" *ngIf="!ator.profile_path">👤</div>
+          </div>
+          <p class="actor-name">{{ ator.name }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="recommendations-section" *ngIf="filmeSelecionado.recommendations?.length > 0" style="margin-top: 50px;">
+      <h3>Títulos Semelhantes</h3>
+      <div class="horizontal-scroll">
+        <div *ngFor="let r of filmeSelecionado.recommendations" class="mini-card" (click)="verDetalhes(r)">
+          <img [src]="'https://image.tmdb.org/t/p/w342' + r.poster_path">
+          <div class="mini-rating">⭐ {{ r.vote_average | number:'1.1-1' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trailer-modal" *ngIf="mostrarTrailer" (click)="mostrarTrailer = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-modal" (click)="mostrarTrailer = false">×</button>
+        <iframe *ngIf="filmeSelecionado.trailerKey" 
+                [src]="getSafeUrl(filmeSelecionado.trailerKey)" 
+                frameborder="0" 
+                allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" *ngIf="toastMensagem" [ngClass]="toastTipo">
+    <span class="toast-icon">{{ toastTipo === 'success' ? '✅' : '🗑️' }}</span>
+    <p>{{ toastMensagem }}</p>
+  </div>
+
+</div>
