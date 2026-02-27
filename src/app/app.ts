@@ -1,12 +1,13 @@
-import { Component, OnInit, HostListener } from '@angular/core'; // Adicionado HostListener
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; 
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MovieService } from './services/movie.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule], 
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -17,12 +18,26 @@ export class AppComponent implements OnInit {
   carregando: boolean = false;
   mostrarTrailer: boolean = false;
   
+  // --- VARIÁVEL PARA EPISÓDIOS ---
+  temporadaSelecionada: any = null;
+
   // --- VARIÁVEIS INFINITE SCROLL ---
   emListagem: boolean = false;
   paginaAtual: number = 1;
   bloquearScroll: boolean = false;
   idGeneroAtivo: number | null = null;
   termoBuscaAtual: string | null = null;
+
+  // --- VARIÁVEL DE TEMA ---
+  temaEscuro: boolean = true;
+
+  // --- NOVO: VARIÁVEIS DE FILTRO ---
+  ordemSelecionada: string = 'popularity.desc';
+  opcoesOrdenacao = [
+    { label: '🔥 Mais Populares', value: 'popularity.desc' },
+    { label: '⭐ Melhor Avaliados', value: 'vote_average.desc' },
+    { label: '📅 Lançamentos', value: 'primary_release_date.desc' }
+  ];
 
   // --- VARIÁVEIS NOTIFICAÇÕES (TOAST) ---
   toastMensagem: string | null = null;
@@ -58,25 +73,51 @@ export class AppComponent implements OnInit {
     this.carregarFavoritos();
   }
 
-  // --- DETECTAR ROLAGEM (INFINITE SCROLL) ---
+  selecionarTemporada(season: any) {
+  // Se clicar na mesma que já está aberta, ela fecha
+  if (this.temporadaSelecionada?.season_number === season.season_number) {
+    this.temporadaSelecionada = null;
+    return;
+  }
+
+  this.carregando = true;
+  // Chamamos o back-end passando o ID da série e o número da temporada
+  const url = `series/${this.filmeSelecionado.id}/season/${season.season_number}`;
+  
+  this.movieService.getMovie(url).subscribe({
+    next: (detalhesTemporada: any) => {
+      this.temporadaSelecionada = detalhesTemporada;
+      this.carregando = false;
+    },
+    error: () => {
+      this.carregando = false;
+      this.showToast('Erro ao carregar episódios', 'error');
+    }
+  });
+}
+
   @HostListener('window:scroll', [])
   onWindowScroll() {
-    // Não carrega se já estiver carregando, se estiver nos detalhes ou se não houver lista
     if (this.carregando || this.bloquearScroll || this.filmeSelecionado || !this.emListagem) return;
 
     const posicaoAtual = window.innerHeight + window.scrollY;
     const alturaTotal = document.documentElement.scrollHeight;
 
-    // Quando faltar 400px para o fim da página, busca a próxima
     if (posicaoAtual >= alturaTotal - 400) {
       this.carregarMais();
     }
   }
 
-  // --- LÓGICA DE NAVEGAÇÃO ---
+  mudarFiltro() {
+    if (this.idGeneroAtivo && this.generoAtivo) {
+      this.filmes = []; 
+      this.buscarPorGenero(this.idGeneroAtivo, this.generoAtivo);
+    }
+  }
 
   irParaHome() {
     this.filmeSelecionado = null;
+    this.temporadaSelecionada = null; // Limpa temporada ao sair
     this.filmes = [];
     this.pessoasEncontradas = [];
     this.artistaNome = null;
@@ -86,19 +127,19 @@ export class AppComponent implements OnInit {
     this.filmeDeOrigem = null;
     this.paginaAtual = 1;
     this.termoBuscaAtual = null;
+    this.ordemSelecionada = 'popularity.desc'; 
     window.scrollTo(0, 0);
   }
 
   voltar() {
     if (this.filmeSelecionado) {
       this.filmeSelecionado = null;
+      this.temporadaSelecionada = null; // Limpa temporada ao voltar
       this.mostrarTrailer = false;
     } else if (this.emListagem || this.artistaNome) {
       this.irParaHome();
     }
   }
-
-  // --- BUSCAS E FILTROS COM PAGINAÇÃO ---
 
   buscarPorGenero(id: number, nome: string) {
     this.carregando = true;
@@ -106,10 +147,12 @@ export class AppComponent implements OnInit {
     this.idGeneroAtivo = id;
     this.emListagem = true;
     this.artistaNome = null;
-    this.paginaAtual = 1; // Reseta para primeira página
+    this.paginaAtual = 1; 
     this.filmes = [];
 
-    this.movieService.getMovie(`genre/${id}?page=${this.paginaAtual}`).subscribe({
+    const url = `genre/${id}?page=${this.paginaAtual}&sortBy=${this.ordemSelecionada}`;
+    
+    this.movieService.getMovie(url).subscribe({
       next: (dados: any) => {
         this.filmes = this.normalizarLista(dados);
         this.carregando = false;
@@ -145,16 +188,14 @@ export class AppComponent implements OnInit {
     this.paginaAtual++;
     this.bloquearScroll = true;
 
-    // Define a rota baseada no que está sendo exibido
     const path = this.generoAtivo 
-      ? `genre/${this.idGeneroAtivo}?page=${this.paginaAtual}`
+      ? `genre/${this.idGeneroAtivo}?page=${this.paginaAtual}&sortBy=${this.ordemSelecionada}`
       : `search/${this.termoBuscaAtual}?page=${this.paginaAtual}`;
 
     this.movieService.getMovie(path).subscribe({
       next: (novosDados: any) => {
         const novosFilmes = this.normalizarLista(novosDados);
         if (novosFilmes.length > 0) {
-          // O segredo do Infinite Scroll: Adiciona os novos filmes ao final da lista atual
           this.filmes = [...this.filmes, ...novosFilmes];
           this.bloquearScroll = false;
         }
@@ -163,12 +204,10 @@ export class AppComponent implements OnInit {
     });
   }
 
-  // --- FAVORITOS E NOTIFICAÇÕES (TOAST) ---
-
   showToast(mensagem: string, tipo: 'success' | 'error' = 'success') {
     this.toastMensagem = mensagem;
     this.toastTipo = tipo;
-    setTimeout(() => this.toastMensagem = null, 3000); // Some após 3 segundos
+    setTimeout(() => this.toastMensagem = null, 3000);
   }
 
   toggleFavorito(filme: any, event: Event) {
@@ -186,8 +225,6 @@ export class AppComponent implements OnInit {
     
     localStorage.setItem('minhaLista', JSON.stringify(this.favoritos));
   }
-
-  // --- RESTANTE DOS MÉTODOS ---
 
   buscarPorPessoa(nome: string) {
     if (!nome || nome === 'Não informado') return;
@@ -257,6 +294,7 @@ export class AppComponent implements OnInit {
   verDetalhes(filme: any) {
     this.carregando = true;
     this.mostrarTrailer = false; 
+    this.temporadaSelecionada = null; // Reseta temporada ao abrir novo detalhe
     const busca = filme.title || filme.name;
 
     this.movieService.getMovie(`details/${busca}`).subscribe({
@@ -276,28 +314,19 @@ export class AppComponent implements OnInit {
     });
   }
 
-  voltarParaLista() { this.irParaHome(); }
-
-  voltarParaFilmeAnterior() {
-    this.filmeSelecionado = this.filmeDeOrigem;
-    this.filmeDeOrigem = null;
-    this.artistaNome = null;
+  formatarDuracao(minutos: number): string {
+    if (!minutos || minutos === 0) return '';
+    const horas = Math.floor(minutos / 60);
+    const min = minutos % 60;
+    return horas > 0 ? `${horas}h ${min}min` : `${min}min`;
   }
-  // Transforma minutos em formato de horas e minutos
-formatarDuracao(minutos: number): string {
-  if (!minutos || minutos === 0) return '';
-  const horas = Math.floor(minutos / 60);
-  const min = minutos % 60;
-  return horas > 0 ? `${horas}h ${min}min` : `${min}min`;
-}
 
-// Transforma números em formato de moeda (Dólar)
-formatarMoeda(valor: number): string {
-  if (!valor || valor === 0) return 'Não informado';
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: 'USD',
-    maximumFractionDigits: 0 
-  }).format(valor);
-}
+  formatarMoeda(valor: number): string {
+    if (!valor || valor === 0) return 'Não informado';
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      maximumFractionDigits: 0 
+    }).format(valor);
+  }
 }

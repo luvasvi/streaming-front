@@ -727,3 +727,253 @@ h1 {
   border-color: #00ff88;
   background: rgba(0, 255, 136, 0.1);
 }
+/* --- BARRA DE FILTROS NEON --- */
+.filter-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.filter-group label {
+  color: #aaa;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.filter-group select {
+  background: transparent;
+  color: #00ff88; /* Verde Neon */
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  padding-right: 5px;
+}
+
+/* Estilo para as opções dentro do select */
+.filter-group select option {
+  background: #121212;
+  color: #eee;
+}
+
+/* Efeito ao passar o mouse na barra de filtro */
+.filter-group:hover {
+  border-color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+/* =========================================
+   CARDS DE TEMPORADAS (SÉRIES)
+   ========================================= */
+.seasons-section h3 {
+  color: #fff;
+  border-left: 4px solid #00ff88;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+.season-card {
+  flex: 0 0 auto;
+  width: 140px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #333;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+}
+
+.season-card:hover {
+  transform: translateY(-5px);
+  border-color: #00ff88;
+  box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
+}
+
+.season-card img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+}
+
+.season-info {
+  padding: 10px;
+  text-align: center;
+}
+
+.season-info h4 {
+  font-size: 0.9rem;
+  color: #eee;
+  margin: 0 0 5px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.season-info p {
+  font-size: 0.75rem;
+  color: #00ff88; /* Detalhe neon na quantidade de episódios */
+  margin: 0;
+  font-weight: 500;
+}
+/* =========================================
+   LISTA DE EPISÓDIOS (MODO DARK/NEON)
+   ========================================= */
+.episodes-wrapper {
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.episodes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  padding-bottom: 15px;
+}
+
+.episodes-header h3 {
+  color: #00ff88;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-close-ep {
+  background: transparent;
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  padding: 5px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-close-ep:hover {
+  background: #00ff88;
+  color: #000;
+}
+
+/* Item da Lista */
+.episode-item {
+  display: flex;
+  gap: 20px;
+  padding: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.3s;
+}
+
+.episode-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Imagem do Episódio */
+.ep-image {
+  position: relative;
+  flex: 0 0 180px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ep-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ep-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.ep-number {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff88;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Informações */
+.ep-info {
+  flex: 1;
+}
+
+.ep-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ep-info h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.ep-rating {
+  font-size: 0.8rem;
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.ep-overview {
+  color: #bbb;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  
+  /* Configurações para truncar texto em 3 linhas */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  
+  /* Propriedade padrão (suporte futuro e modernidade) */
+  line-clamp: 3; 
+  
+  /* Garante que o conteúdo escondido não vaze */
+  overflow: hidden;
+  
+  /* Melhora a quebra de palavras em containers apertados */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Responsividade para celular */
+@media (max-width: 600px) {
+  .episode-item {
+    flex-direction: column;
+  }
+  .ep-image {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 180px;
+  }
+}

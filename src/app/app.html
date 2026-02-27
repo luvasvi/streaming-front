@@ -32,24 +32,24 @@
         <div *ngFor="let card of [1,2,3,4,5,6]" class="skeleton skeleton-card"></div>
       </div>
     </section>
-
-    <section class="shelf">
-      <div class="skeleton" style="width: 250px; height: 25px; margin-bottom: 20px; border-radius: 4px;"></div>
-      <div class="horizontal-scroll">
-        <div *ngFor="let actor of [1,2,3,4,5,6]" style="text-align: center; min-width: 130px;">
-          <div class="skeleton skeleton-circle"></div>
-          <div class="skeleton skeleton-text"></div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <h2 *ngIf="generoAtivo && filmes.length > 0 && !filmeSelecionado && !carregando" class="genre-title">
     Explorando: <span>{{ generoAtivo }}</span>
   </h2>
 
+  <div class="filter-container" *ngIf="generoAtivo && !filmeSelecionado && !carregando && filmes.length > 0">
+    <div class="filter-group">
+      <label for="sortSelect">Ordenar por:</label>
+      <select id="sortSelect" [(ngModel)]="ordemSelecionada" (change)="mudarFiltro()">
+        <option *ngFor="let opt of opcoesOrdenacao" [value]="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
   <div class="home-showcase" *ngIf="filmes.length === 0 && pessoasEncontradas.length === 0 && !filmeSelecionado && !carregando && !artistaNome">
-    
     <section class="shelf" *ngIf="favoritos.length > 0">
       <h2>❤️ Minha Lista</h2>
       <div class="horizontal-scroll">
@@ -89,12 +89,6 @@
     </section>
   </div>
 
-  <div class="artist-context-banner" *ngIf="artistaNome && !filmeSelecionado && !carregando">
-    <div class="artist-header-content">
-      <h2>Obras com: <span>{{ artistaNome }}</span></h2>
-    </div>
-  </div>
-
   <div class="search-results-container" *ngIf="(filmes.length > 0 || pessoasEncontradas.length > 0) && !filmeSelecionado && !carregando">
     <section class="shelf" *ngIf="pessoasEncontradas.length > 0 && !artistaNome">
       <h2>👤 Artistas Encontrados</h2>
@@ -110,19 +104,14 @@
     </section>
 
     <section *ngIf="filmes.length > 0">
-      <h2 *ngIf="!artistaNome && !generoAtivo && pessoasEncontradas.length > 0" style="color: #eee; padding-left: 10px; border-left: 4px solid #00ff88; margin-bottom: 20px;">🎬 Obras Encontradas</h2>
       <div class="movies-grid">
         <div *ngFor="let f of filmes" class="movie-card" (click)="verDetalhes(f)">
           <div class="poster-wrapper">
             <img *ngIf="f.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + f.poster_path">
-            <div class="no-photo" *ngIf="!f.poster_path" style="height: 100%; display: flex; align-items: center; justify-content: center; background: #222; font-size: 2rem;">🎬</div>
             <div class="rating-badge">⭐ {{ f.vote_average | number:'1.1-1' }}</div>
-            <button class="btn-heart" (click)="toggleFavorito(f, $event)">
-              {{ isFavorito(f.id) ? '❤️' : '🤍' }}
-            </button>
           </div>
           <div class="movie-info">
-            <h3>{{ f.title || f.name }} <span *ngIf="f.anoLancamento" style="color: #00ff88; font-size: 0.8rem; margin-left: 5px;">({{ f.anoLancamento }})</span></h3>
+            <h3>{{ f.title || f.name }} <span *ngIf="f.anoLancamento">({{ f.anoLancamento }})</span></h3>
           </div>
         </div>
       </div>
@@ -137,8 +126,6 @@
     <div class="detail-content">
       <div class="poster-side">
         <img *ngIf="filmeSelecionado.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + filmeSelecionado.poster_path" class="detail-poster">
-        <div class="no-photo detail-poster" *ngIf="!filmeSelecionado.poster_path" style="display: flex; align-items: center; justify-content: center; background: #222; font-size: 3rem;">🎬</div>
-        
         <button *ngIf="filmeSelecionado.trailerKey" class="btn-trailer" (click)="mostrarTrailer = true">
           ▶ Assistir Trailer
         </button>
@@ -147,38 +134,15 @@
       <div class="detail-info">
         <h2>
           {{ filmeSelecionado.title || filmeSelecionado.name }} 
-          <span *ngIf="filmeSelecionado.anoLancamento" style="color: #00ff88; font-weight: 300; font-size: 1.8rem;">({{ filmeSelecionado.anoLancamento }})</span>
+          <span *ngIf="filmeSelecionado.anoLancamento">({{ filmeSelecionado.anoLancamento }})</span>
         </h2>
-
         <p class="tagline" *ngIf="filmeSelecionado.tagline">"{{ filmeSelecionado.tagline }}"</p>
-
         <div class="meta-info-row">
-          <span class="info-tag" *ngIf="filmeSelecionado.runtime">
-            ⏱️ {{ formatarDuracao(filmeSelecionado.runtime) }}
-          </span>
-          <span class="info-tag" *ngIf="filmeSelecionado.budget > 0">
-            💰 Orçamento: {{ formatarMoeda(filmeSelecionado.budget) }}
-          </span>
-          <span class="info-tag" *ngIf="filmeSelecionado.revenue > 0">
-            📈 Receita: {{ formatarMoeda(filmeSelecionado.revenue) }}
-          </span>
+          <span class="info-tag" *ngIf="filmeSelecionado.runtime">⏱️ {{ formatarDuracao(filmeSelecionado.runtime) }}</span>
+          <span class="info-tag" *ngIf="filmeSelecionado.budget > 0">💰 Orçamento: {{ formatarMoeda(filmeSelecionado.budget) }}</span>
         </div>
-
         <p class="overview">{{ filmeSelecionado.overview }}</p>
-        
-        <p><strong>Diretor/Criador:</strong> 
-          <span class="link-clicavel" (click)="buscarPorPessoa(filmeSelecionado.director)">
-            {{ filmeSelecionado.director }}
-          </span>
-        </p>
-
-        <div *ngIf="filmeSelecionado.watch_providers?.flatrate" class="streaming-section">
-          <h3>Disponível em:</h3>
-          <div class="provider-list">
-            <img *ngFor="let p of filmeSelecionado.watch_providers.flatrate" 
-                 [src]="'https://image.tmdb.org/t/p/original' + p.logo_path" class="provider-logo">
-          </div>
-        </div>
+        <p><strong>Diretor/Criador:</strong> <span class="link-clicavel" (click)="buscarPorPessoa(filmeSelecionado.director)">{{ filmeSelecionado.director }}</span></p>
       </div>
     </div>
 
@@ -195,6 +159,48 @@
       </div>
     </div>
 
+    <div class="seasons-section" *ngIf="filmeSelecionado.seasons?.length > 0" style="margin-top: 40px;">
+      <h3>Temporadas ({{ filmeSelecionado.number_of_seasons }})</h3>
+      <div class="horizontal-scroll">
+        <div *ngFor="let season of filmeSelecionado.seasons" 
+             class="season-card" 
+             (click)="selecionarTemporada(season)"
+             [class.active]="temporadaSelecionada?.season_number === season.season_number">
+          <img *ngIf="season.poster_path" [src]="'https://image.tmdb.org/t/p/w185' + season.poster_path" [alt]="season.name">
+          <div class="no-photo" *ngIf="!season.poster_path" style="height: 210px; display: flex; align-items: center; justify-content: center; background: #222; font-size: 2rem;">📺</div>
+          <div class="season-info">
+            <h4>{{ season.name }}</h4>
+            <p>{{ season.episode_count }} episódios</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="episodes-wrapper" *ngIf="temporadaSelecionada?.episodes">
+      <div class="episodes-header">
+        <h3>{{ temporadaSelecionada.name }} — Episódios</h3>
+        <button class="btn-close-ep" (click)="temporadaSelecionada = null">Fechar ×</button>
+      </div>
+
+      <div class="episodes-list">
+        <div *ngFor="let ep of temporadaSelecionada.episodes" class="episode-item">
+          <div class="ep-image">
+            <img *ngIf="ep.still_path" [src]="'https://image.tmdb.org/t/p/w300' + ep.still_path" [alt]="ep.name">
+            <div class="ep-placeholder" *ngIf="!ep.still_path">📺</div>
+            <span class="ep-number">EP {{ ep.episodeNumber }}</span>
+          </div>
+          
+          <div class="ep-info">
+            <div class="ep-title-row">
+              <h4>{{ ep.name }}</h4>
+              <span class="ep-rating" *ngIf="ep.voteAverage > 0">⭐ {{ ep.voteAverage.toFixed(1) }}</span>
+            </div>
+            <p class="ep-overview">{{ ep.overview || 'Sinopse não disponível para este episódio.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="recommendations-section" *ngIf="filmeSelecionado.recommendations?.length > 0" style="margin-top: 50px;">
       <h3>Títulos Semelhantes</h3>
       <div class="horizontal-scroll">

@@ -1,13 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http'; // Importamos do common/http
+import { provideHttpClientTesting } from '@angular/common/http/testing'; // E a ferramenta de teste separada
+import { MovieService } from './movie.service';
 
-import { Movie } from './movie';
-
-describe('Movie', () => {
-  let service: Movie;
+describe('MovieService', () => {
+  let service: MovieService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Movie);
+    TestBed.configureTestingModule({
+      providers: [
+        MovieService,
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
+    });
+    service = TestBed.inject(MovieService);
   });
 
   it('should be created', () => {
