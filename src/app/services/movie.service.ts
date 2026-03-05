@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MovieService {
-private apiUrl = 'https://streaming-back-production-c915.up.railway.app/movies';
+private apiUrl = 'http://localhost:8080/movies';
 
   constructor(private http: HttpClient) {}
 

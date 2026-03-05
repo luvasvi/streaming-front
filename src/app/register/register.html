@@ -1,0 +1,43 @@
+<div class="login-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
+  <h1 class="logo" style="color: #00ff88; font-size: 3rem; margin-bottom: 10px;">FTTB</h1>
+  <h2 style="color: #00ff88; margin-bottom: 20px;">Crie sua conta</h2>
+
+  <input type="email" [(ngModel)]="email" placeholder="E-mail" 
+         style="background: #222; color: white; border: 1px solid #444; padding: 12px; margin-bottom: 10px; border-radius: 8px; width: 280px;">
+
+  <input type="password" [(ngModel)]="password" placeholder="Senha" 
+         style="background: #222; color: white; border: 1px solid #444; padding: 12px; margin-bottom: 10px; border-radius: 8px; width: 280px;">
+
+  <input type="password" [(ngModel)]="confirmPassword" placeholder="Confirmar Senha" 
+         style="background: #222; color: white; border: 1px solid #444; padding: 12px; margin-bottom: 20px; border-radius: 8px; width: 280px;">
+
+  @if (password && confirmPassword && password !== confirmPassword) {
+    <p style="color: #ff4444; font-size: 0.8rem; margin-bottom: 15px;">⚠️ As senhas não coincidem.</p>
+  }
+
+  <button (click)="onRegister()" 
+          style="background: #00ff88; color: black; border: none; padding: 12px 60px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-bottom: 25px; width: 280px;">
+    CADASTRAR
+  </button>
+
+  <div style="height: 1px; width: 280px; background: #444; margin-bottom: 25px;"></div>
+
+  <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">Já possui uma conta?</p>
+  <button routerLink="/login" 
+          style="background: transparent; color: #00ff88; border: 1px solid #00ff88; padding: 10px 40px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 280px;">
+    ENTRAR AGORA
+  </button>
+</div>
+
+@if (toastMensagem) {
+  <div class="toast-container" [ngClass]="toastTipo" 
+       style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0); 
+              padding: 15px 30px; border-radius: 8px; color: white; z-index: 1000;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-weight: bold; display: flex; 
+              align-items: center; gap: 10px; min-width: 280px; justify-content: center;
+              white-space: nowrap;">
+    
+    <span class="toast-icon">{{ toastTipo === 'success' ? '✅' : '⚠️' }}</span>
+    <p style="margin: 0;">{{ toastMensagem }}</p>
+  </div>
+}

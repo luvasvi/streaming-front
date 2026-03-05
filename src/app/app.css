@@ -977,3 +977,181 @@ h1 {
     height: 180px;
   }
 }
+/* ======================================================= */
+/* FIX FINAL: ESTRUTURA NEON E CENTRALIZAÇÃO               */
+/* ======================================================= */
+
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 40px;
+  position: relative;
+  min-height: 100px;
+  background: linear-gradient(to bottom, #111, transparent);
+  z-index: 1000;
+}
+
+/* Trava o FTTB no centro real, independente dos botões */
+.logo-central {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #00ff88;
+  font-size: 3.5rem; 
+  margin: 0;
+  letter-spacing: 4px; 
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+  cursor: pointer;
+  z-index: 5;
+}
+
+.nav-group-left, .nav-group-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex: 1;
+}
+
+.nav-group-right { justify-content: flex-end; }
+
+/* Padronização de botões (🏠, ↩️, 👤) */
+.btn-nav, .btn-profile-circle {
+  all: unset;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.4rem;
+  transition: 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.btn-nav:hover, .btn-profile-circle:hover {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+}
+
+/* ======================================================= */
+/* MENU DE PERFIL REFINADO (GLASSMORPHISM)                 */
+/* ======================================================= */
+
+.profile-dropdown-box {
+  position: absolute;
+  right: 0;
+  top: 70px;
+  background: rgba(15, 15, 15, 0.85); /* Fundo escuro translúcido */
+  border: 1px solid rgba(0, 255, 136, 0.3); /* Borda neon suave */
+  border-radius: 15px;
+  width: 240px;
+  padding: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 
+              0 0 15px rgba(0, 255, 136, 0.1); /* Brilho externo sutil */
+  z-index: 2000;
+  backdrop-filter: blur(15px); /* Efeito de vidro fosco */
+  animation: fadeInDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-info {
+  display: block;
+  font-size: 0.9rem;
+  color: #eee;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Linha divisória mais elegante */
+hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 255, 136, 0.5), transparent);
+  margin: 15px 0;
+}
+
+/* Botão de Sair Estilizado */
+.btn-exit {
+  width: 100%;
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.4);
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-exit:hover {
+  background: #ff4444;
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Animação de entrada */
+@keyframes fadeInDown {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+/* ======================================================= */
+/* FIX: NAVEGAÇÃO LATERAL NO MOUSE (PC)                    */
+/* ======================================================= */
+
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto; /* Permite o scroll lateral */
+  overflow-y: hidden;
+  gap: 20px;
+  padding: 20px 0;
+  scroll-behavior: smooth;
+  cursor: grab; /* Muda o mouse para uma "mãozinha" de arrastar */
+  
+  /* Esconde a barra feia do Windows mas mantém a função */
+  scrollbar-width: thin; 
+  scrollbar-color: #00ff88 #111;
+}
+
+/* Estilização da barra de rolagem para Chrome/Edge/Safari */
+.horizontal-scroll::-webkit-scrollbar {
+  height: 8px; /* Altura da barra horizontal */
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #00ff88; /* Cor neon do Lucas */
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #00cc6a;
+}
+
+/* Permite que o PC role com o "clique e arraste" via CSS (estratégia passiva) */
+.horizontal-scroll:active {
+  cursor: grabbing;
+}

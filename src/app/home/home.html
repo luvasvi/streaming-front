@@ -1,0 +1,289 @@
+@if (!filmeSelecionado && !artistaNome) {
+<div class="search-box">
+  <input #movieInput type="text" placeholder="Filmes, séries ou artistas..." (keyup.enter)="buscarFilme(movieInput.value)">
+  <button (click)="buscarFilme(movieInput.value)">Buscar</button>
+</div>
+}
+
+@if (!filmeSelecionado && !carregando && !artistaNome) {
+<div class="genre-container">
+  <div class="genre-list">
+    @for (g of generos; track g.id) {
+    <button [class.active]="generoAtivo === g.nome" (click)="buscarPorGenero(g.id, g.nome)">
+      {{ g.nome }}
+    </button>
+    }
+  </div>
+</div>
+}
+
+@if (carregando) {
+<div class="home-showcase">
+  @for (shelf of [1,2]; track shelf) {
+  <section class="shelf">
+    <div class="skeleton" style="width: 200px; height: 25px; margin-bottom: 20px; border-radius: 4px;"></div>
+    <div class="horizontal-scroll">
+      @for (card of [1,2,3,4,5,6]; track card) {
+      <div class="skeleton skeleton-card"></div>
+      }
+    </div>
+  </section>
+  }
+</div>
+}
+
+@if (generoAtivo && filmes.length > 0 && !filmeSelecionado && !carregando && !artistaNome) {
+<h2 class="genre-title">Explorando: <span>{{ generoAtivo }}</span></h2>
+}
+
+@if (generoAtivo && !filmeSelecionado && !carregando && filmes.length > 0 && !artistaNome) {
+<div class="filter-container">
+  <div class="filter-group">
+    <label for="sortSelect">Ordenar por:</label>
+    <select id="sortSelect" [(ngModel)]="ordemSelecionada" (change)="mudarFiltro()">
+      @for (opt of opcoesOrdenacao; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+</div>
+}
+
+@if (filmes.length === 0 && pessoasEncontradas.length === 0 && !filmeSelecionado && !carregando && !artistaNome) {
+<div class="home-showcase">
+
+  @if (favoritos.length > 0) {
+  <section class="shelf">
+    <h2>❤️ Minha Lista</h2>
+    <div class="horizontal-scroll">
+      @for (fav of favoritos; track fav.movieId) {
+      <div class="mini-card" (click)="verDetalhes(fav)">
+        <img *ngIf="fav.posterPath" [src]="'https://image.tmdb.org/t/p/w342' + fav.posterPath" [alt]="fav.title">
+        <button class="btn-heart-mini" (click)="toggleFavorito(fav, $event)">❤️</button>
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  <section class="shelf">
+    <h2>🔥 Em Alta hoje</h2>
+    <div class="horizontal-scroll">
+      @for (t of trending; track t.id) {
+      <div class="mini-card" (click)="verDetalhes(t)">
+        <img *ngIf="t.poster_path" [src]="'https://image.tmdb.org/t/p/w342' + t.poster_path">
+        <div class="mini-rating">⭐ {{ t.vote_average | number:'1.1-1' }}</div>
+        <button class="btn-heart-mini" (click)="toggleFavorito(t, $event)">
+          {{ isFavorito(t.id) ? '❤️' : '🤍' }}
+        </button>
+      </div>
+      }
+    </div>
+  </section>
+
+  <section class="shelf">
+    <h2>🌟 Estrelas do Momento</h2>
+    <div class="horizontal-scroll actors-circle">
+      @for (p of populares; track p.id) {
+      <div class="actor-mini-card" (click)="buscarPorPessoa(p.name)">
+        <div class="circle-wrapper">
+          <img [src]="'https://image.tmdb.org/t/p/w185' + p.profile_path" *ngIf="p.profile_path">
+          @if (!p.profile_path) { <div class="no-photo-circle">👤</div> }
+        </div>
+        <p>{{ p.name }}</p>
+      </div>
+      }
+    </div>
+  </section>
+</div>
+}
+
+@if ((filmes.length > 0 || pessoasEncontradas.length > 0) && !filmeSelecionado && !carregando && !artistaNome) {
+<div class="search-results-container">
+
+  @if (pessoasEncontradas.length > 0) {
+  <section class="shelf">
+    <h2>👤 Artistas Encontrados</h2>
+    <div class="horizontal-scroll actors-circle">
+      @for (p of pessoasEncontradas; track p.id) {
+      <div class="actor-mini-card" (click)="buscarPorPessoa(p.name)">
+        <div class="circle-wrapper">
+          <img [src]="'https://image.tmdb.org/t/p/w185' + p.profile_path" *ngIf="p.profile_path">
+          @if (!p.profile_path) { <div class="no-photo-circle">👤</div> }
+        </div>
+        <p>{{ p.name }}</p>
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  @if (filmes.length > 0) {
+  <section>
+    <div class="movies-grid">
+      @for (f of filmes; track f.id) {
+      <div class="movie-card" (click)="verDetalhes(f)">
+        <div class="poster-wrapper" style="position: relative;">
+          <img *ngIf="f.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + f.poster_path">
+          <div class="rating-badge">⭐ {{ f.vote_average | number:'1.1-1' }}</div>
+          <button class="btn-heart-mini" style="position: absolute; top: 10px; right: 10px; z-index: 10;" (click)="toggleFavorito(f, $event)">
+            {{ isFavorito(f.id) ? '❤️' : '🤍' }}
+          </button>
+        </div>
+        <div class="movie-info">
+          <h3>{{ f.title || f.name }} <span *ngIf="f.anoLancamento">({{ f.anoLancamento }})</span></h3>
+        </div>
+      </div>
+      }
+    </div>
+  </section>
+  }
+</div>
+}
+
+@if (artistaNome) {
+<div class="artist-view">
+  <div class="artist-context-banner">
+    <div class="artist-header-content">
+      <h2>Explorando obras de: <span>{{ artistaNome }}</span></h2>
+      <button class="btn-voltar-contexto" (click)="voltar()">↩️ Voltar</button>
+    </div>
+  </div>
+  <div class="movies-grid">
+    @for (f of filmes; track f.id) {
+    <div class="movie-card" (click)="verDetalhes(f)">
+      <div class="poster-wrapper" style="position: relative;">
+        <img *ngIf="f.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + f.poster_path">
+        <div class="rating-badge">⭐ {{ f.vote_average | number:'1.1-1' }}</div>
+        <button class="btn-heart-mini" style="position: absolute; top: 10px; right: 10px; z-index: 10;" (click)="toggleFavorito(f, $event)">
+          {{ isFavorito(f.id) ? '❤️' : '🤍' }}
+        </button>
+      </div>
+      <div class="movie-info">
+        <h3>{{ f.title || f.name }} <span *ngIf="f.anoLancamento">({{ f.anoLancamento }})</span></h3>
+      </div>
+    </div>
+    }
+  </div>
+</div>
+}
+
+@if (filmeSelecionado && !carregando && !artistaNome) {
+<div class="movie-detail-view">
+  <div class="dynamic-blur-bg" *ngIf="filmeSelecionado.poster_path"
+    [style.background-image]="'url(https://image.tmdb.org/t/p/original' + filmeSelecionado.poster_path + ')'">
+  </div>
+
+  <div class="detail-content">
+    <div class="poster-side">
+      <img *ngIf="filmeSelecionado.poster_path" [src]="'https://image.tmdb.org/t/p/w500' + filmeSelecionado.poster_path"
+        class="detail-poster">
+      <button *ngIf="filmeSelecionado.trailerKey" class="btn-trailer" (click)="mostrarTrailer = true">▶ Assistir Trailer</button>
+    </div>
+
+    <div class="detail-info">
+      <h2>{{ filmeSelecionado.title || filmeSelecionado.name }} <span
+          *ngIf="filmeSelecionado.anoLancamento">({{filmeSelecionado.anoLancamento}})</span></h2>
+      @if (filmeSelecionado.tagline) { <p class="tagline">"{{ filmeSelecionado.tagline }}"</p> }
+      <div class="meta-info-row">
+        @if (filmeSelecionado.runtime) { <span class="info-tag">⏱️ {{ formatarDuracao(filmeSelecionado.runtime) }}</span> }
+        @if (filmeSelecionado.budget > 0) { <span class="info-tag">💰 Orçamento: {{ formatarMoeda(filmeSelecionado.budget) }}</span> }
+      </div>
+      <p class="overview">{{ filmeSelecionado.overview }}</p>
+      <p><strong>Diretor/Criador:</strong> <span class="link-clicavel" (click)="buscarPorPessoa(filmeSelecionado.director)">{{
+          filmeSelecionado.director }}</span></p>
+    </div>
+  </div>
+
+  @if (filmeSelecionado.cast?.length > 0) {
+  <div class="cast-section">
+    <h3>Elenco Principal</h3>
+    <div class="cast-list">
+      @for (ator of filmeSelecionado.cast.slice(0, 8); track ator.id) {
+      <div class="actor-card" (click)="buscarPorPessoa(ator.name)">
+        <div class="actor-img-wrapper">
+          <img [src]="'https://image.tmdb.org/t/p/w185' + ator.profile_path" *ngIf="ator.profile_path">
+          @if (!ator.profile_path) { <div class="no-photo">👤</div> }
+        </div>
+        <p class="actor-name">{{ ator.name }}</p>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  @if (filmeSelecionado.seasons?.length > 0) {
+  <div class="seasons-section" style="margin-top: 40px;">
+    <h3>Temporadas ({{ filmeSelecionado.number_of_seasons }})</h3>
+    <div class="horizontal-scroll">
+      @for (season of filmeSelecionado.seasons; track season.id) {
+      <div class="season-card" (click)="selecionarTemporada(season)"
+        [class.active]="temporadaSelecionada?.season_number === season.season_number">
+        <img *ngIf="season.poster_path" [src]="'https://image.tmdb.org/t/p/w185' + season.poster_path" [alt]="season.name">
+        <div class="season-info">
+          <h4>{{ season.name }}</h4>
+          <p>{{ season.episode_count }} episódios</p>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  @if (temporadaSelecionada?.episodes) {
+  <div class="episodes-wrapper">
+    <div class="episodes-header">
+      <h3>{{ temporadaSelecionada.name }} — Episódios</h3>
+      <button class="btn-close-ep" (click)="temporadaSelecionada = null">Fechar ×</button>
+    </div>
+    <div class="episodes-list">
+      @for (ep of temporadaSelecionada.episodes; track ep.id) {
+      <div class="episode-item">
+        <div class="ep-image">
+          <img *ngIf="ep.still_path" [src]="'https://image.tmdb.org/t/p/w300' + ep.still_path">
+          <span class="ep-number">EP {{ ep.episodeNumber }}</span>
+        </div>
+        <div class="ep-info">
+          <h4>{{ ep.name }}</h4>
+          <p class="ep-overview">{{ ep.overview }}</p>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  @if (filmeSelecionado.recommendations?.length > 0) {
+  <div class="recommendations-section" style="margin-top: 50px;">
+    <h3>Títulos Semelhantes</h3>
+    <div class="horizontal-scroll">
+      @for (r of filmeSelecionado.recommendations; track r.id) {
+      <div class="mini-card" (click)="verDetalhes(r)">
+        <img [src]="'https://image.tmdb.org/t/p/w342' + r.poster_path">
+        <div class="mini-rating">⭐ {{ r.vote_average | number:'1.1-1' }}</div>
+        <button class="btn-heart-mini" (click)="toggleFavorito(r, $event)">
+          {{ isFavorito(r.id) ? '❤️' : '🤍' }}
+        </button>
+      </div>
+      }
+    </div>
+  </div>
+  }
+</div>
+}
+
+@if (mostrarTrailer) {
+<div class="trailer-modal" (click)="mostrarTrailer = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="close-modal" (click)="mostrarTrailer = false">×</button>
+    <iframe *ngIf="filmeSelecionado?.trailerKey" [src]="getSafeUrl(filmeSelecionado.trailerKey)" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>
+}
+
+@if (toastMensagem) {
+<div class="toast-container" [ngClass]="toastTipo">
+  <span class="toast-icon">{{ toastTipo === 'success' ? '✅' : '🗑️' }}</span>
+  <p>{{ toastMensagem }}</p>
+</div>
+}
