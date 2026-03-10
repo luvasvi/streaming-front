@@ -58,7 +58,10 @@
     <div class="horizontal-scroll">
       @for (fav of favoritos; track fav.movieId) {
       <div class="mini-card" (click)="verDetalhes(fav)">
-        <img *ngIf="fav.posterPath" [src]="'https://image.tmdb.org/t/p/w342' + fav.posterPath" [alt]="fav.title">
+        <img *ngIf="fav.posterPath || fav.poster_path" 
+             [src]="'https://image.tmdb.org/t/p/w342' + (fav.posterPath || fav.poster_path)" 
+             [alt]="fav.title">
+        
         <button class="btn-heart-mini" (click)="toggleFavorito(fav, $event)">❤️</button>
       </div>
       }

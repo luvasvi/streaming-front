@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; 
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MovieService } from '../services/movie.service';
-import { HttpClient } from '@angular/common/http'; // ADICIONADO: Para salvar no Java
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router'; // ADICIONADO
 
 @Component({
   selector: 'app-home',
@@ -45,11 +46,11 @@ export class HomeComponent implements OnInit {
   artistaNome: string | null = null; 
   favoritos: any[] = [];
 
-  // MUDANÇA: Injetado o HttpClient
   constructor(
     private movieService: MovieService, 
     private sanitizer: DomSanitizer,
-    private http: HttpClient 
+    private http: HttpClient,
+    private router: Router 
   ) {}
 
   ngOnInit() {
@@ -57,7 +58,62 @@ export class HomeComponent implements OnInit {
     this.carregarFavoritos();
   }
 
-  // --- LÓGICA DE NAVEGAÇÃO EM CAMADAS (MANTIDA) ---
+  // --- CONTROLE DE SESSÃO ---
+  fazerLogout() {
+    localStorage.removeItem('userAuth');
+    localStorage.removeItem('userEmail');
+    this.router.navigate(['/login']);
+  }
+
+  // --- LÓGICA DE FAVORITOS (INTEGRADA COM JWT) ---
+  carregarFavoritos() {
+    this.http.get<any[]>('http://localhost:8080/favorites').subscribe({
+      next: (dados) => this.favoritos = dados,
+      error: (err) => {
+        // Se o token expirou ou é inválido, manda pro login
+        if (err.status === 401 || err.status === 403) {
+          this.fazerLogout();
+        }
+        console.error("Erro ao carregar favoritos", err);
+      }
+    });
+  }
+
+  toggleFavorito(filme: any, event: Event) {
+    event.stopPropagation();
+    const titulo = filme.title || filme.name;
+    const favoritoExistente = this.favoritos.find(f => f.movieId === filme.id);
+
+    if (!favoritoExistente) {
+      const payload = {
+        movieId: filme.id,
+        title: titulo,
+        posterPath: filme.poster_path
+      };
+      // O Interceptor anexa o Token Bearer automaticamente aqui
+      this.http.post('http://localhost:8080/favorites/add', payload).subscribe({
+        next: (res: any) => {
+          this.favoritos.push(res);
+          this.showToast(`"${titulo}" salvo nos favoritos!`);
+        },
+        error: () => this.showToast('Erro ao favoritar', 'error')
+      });
+    } else {
+      this.http.delete(`http://localhost:8080/favorites/${filme.id}`).subscribe({
+        next: () => {
+          this.favoritos = this.favoritos.filter(f => f.movieId !== filme.id);
+          this.showToast(`"${titulo}" removido.`, 'error');
+        },
+        error: () => this.showToast('Erro ao remover', 'error')
+      });
+    }
+  }
+
+  isFavorito(filmeId: number): boolean { 
+    return this.favoritos.some(f => f.movieId === filmeId); 
+  }
+
+  // --- MÉTODOS DE NAVEGAÇÃO E TMDB (MANTIDOS) ---
   voltar() {
     if (this.artistaNome) {
       this.artistaNome = null;
@@ -189,36 +245,6 @@ export class HomeComponent implements OnInit {
     setTimeout(() => this.toastMensagem = null, 3000);
   }
 
-  // --- MUDANÇA: AGORA SALVA NO JAVA ---
-  toggleFavorito(filme: any, event: Event) {
-    event.stopPropagation();
-    const titulo = filme.title || filme.name;
-    const favoritoExistente = this.favoritos.find(f => f.movieId === filme.id);
-
-    if (!favoritoExistente) {
-      const payload = {
-        movieId: filme.id,
-        title: titulo,
-        posterPath: filme.poster_path
-      };
-      this.http.post('http://localhost:8080/favorites/add', payload).subscribe({
-        next: (res: any) => {
-          this.favoritos.push(res);
-          this.showToast(`"${titulo}" salvo no banco!`);
-        },
-        error: () => this.showToast('Erro ao favoritar', 'error')
-      });
-    } else {
-      this.http.delete(`http://localhost:8080/favorites/${filme.id}`).subscribe({
-        next: () => {
-          this.favoritos = this.favoritos.filter(f => f.movieId !== filme.id);
-          this.showToast(`"${titulo}" removido.`, 'error');
-        },
-        error: () => this.showToast('Erro ao remover', 'error')
-      });
-    }
-  }
-
   getSafeUrl(key: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${key}?autoplay=1`);
   }
@@ -250,18 +276,6 @@ export class HomeComponent implements OnInit {
     this.movieService.getMovie('popular-people').subscribe({
       next: (dados: any) => this.populares = this.normalizarLista(dados)
     });
-  }
-
-  // --- MUDANÇA: BUSCA FAVORITOS DO JAVA ---
-  carregarFavoritos() {
-    this.http.get<any[]>('http://localhost:8080/favorites').subscribe({
-      next: (dados) => this.favoritos = dados,
-      error: (err) => console.error("Erro ao carregar favoritos", err)
-    });
-  }
-
-  isFavorito(filmeId: number): boolean { 
-    return this.favoritos.some(f => f.movieId === filmeId); 
   }
 
   verDetalhes(filme: any) {

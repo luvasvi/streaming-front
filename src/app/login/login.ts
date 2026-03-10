@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router, RouterModule } from '@angular/router'; // 1. Adicionado RouterModule aqui
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -7,12 +7,12 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterModule], // 2. RouterModule adicionado nos imports
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
 export class LoginComponent {
-  username = '';
+  username = ''; 
   password = '';
   erroMensagem = ''; 
 
@@ -21,35 +21,30 @@ export class LoginComponent {
   onLogin() {
     this.erroMensagem = ''; 
     
-    const cleanUsername = this.username.trim();
-    const cleanPassword = this.password.trim();
+    const loginData = {
+      username: this.username.trim(),
+      password: this.password.trim()
+    };
 
-    const authValue = 'Basic ' + btoa(cleanUsername + ':' + cleanPassword);
-    
-    console.log("Tentando autenticação para:", cleanUsername);
+    console.log("Iniciando Login Bearer para:", loginData.username);
 
-    this.http.get<any>('http://localhost:8080/favorites', {
-      headers: { 'Authorization': authValue }
-    }).subscribe({
+    this.http.post<any>('http://localhost:8080/login', loginData).subscribe({
       next: (res) => {
-        console.log("Login realizado com sucesso no Back-end!");
+        console.log("Token JWT recebido com sucesso!");
         
-        localStorage.setItem('userAuth', authValue);
-        localStorage.setItem('userEmail', cleanUsername);
+        localStorage.setItem('userAuth', res.token); 
+        localStorage.setItem('userEmail', res.username);
         
-        this.router.navigate(['/']).then(nav => {
-          if (nav) {
-            console.log("Navegação para a Home concluída.");
-          } else {
-            console.error("Falha na navegação. Verifique suas rotas no app.routes.ts!");
-          }
-        });
+        this.router.navigate(['/']);
       },
       error: (err) => {
-        console.error("Erro no login:", err);
-        this.erroMensagem = 'Usuário ou senha inválidos no servidor.';
+        console.error("Erro na autenticação:", err);
+        this.erroMensagem = 'E-mail ou senha incorretos.';
         this.password = ''; 
       }
     });
+  }
+  ngOnInit() {
+    localStorage.clear();
   }
 }
